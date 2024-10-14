@@ -1,11 +1,11 @@
 import { Room, Client } from "colyseus";
-import { InputData, MyRoomState, Player } from "./Part3State";
+import { InputData, MainState, Player } from "./schema/main-state";
 
-export class Part4Room extends Room<MyRoomState> {
+export class MainRoom extends Room<MainState> {
   fixedTimeStep = 1000 / 60;
 
   onCreate (options: any) {
-    this.setState(new MyRoomState());
+    this.setState(new MainState());
 
     // set map dimensions
     this.state.mapWidth = 800;

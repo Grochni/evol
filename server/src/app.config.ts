@@ -1,14 +1,7 @@
 import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { Server } from "colyseus";
-
-/**
- * Import your Room files
- */
-import { Part1Room } from "./rooms/Part1Room";
-import { Part2Room } from "./rooms/Part2Room";
-import { Part3Room } from "./rooms/Part3Room";
-import { Part4Room } from "./rooms/Part4Room";
+import { MainRoom } from "./rooms/main-room";
 
 let gameServerRef: Server;
 let latencySimulationMs: number = 0;
@@ -22,10 +15,7 @@ export default config({
         /**
          * Define your room handlers:
          */
-        gameServer.define('part1_room', Part1Room);
-        gameServer.define('part2_room', Part2Room);
-        gameServer.define('part3_room', Part3Room);
-        gameServer.define('part4_room', Part4Room);
+        gameServer.define('main_room', MainRoom);
 
         //
         // keep gameServer reference, so we can

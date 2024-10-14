@@ -1,18 +1,8 @@
-/**
- * ---------------------------
- * Phaser + Colyseus - Part 3.
- * ---------------------------
- * - Connecting with the room
- * - Sending inputs at the user's framerate
- * - Update other player's positions WITH interpolation (for other players)
- * - Client-predicted input for local (current) player
- */
-
 import Phaser from "phaser";
 import { Room, Client } from "colyseus.js";
 import { BACKEND_URL } from "../backend";
 
-export class Part3Scene extends Phaser.Scene {
+export class MainScene extends Phaser.Scene {
     room: Room;
 
     currentPlayer: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
@@ -30,10 +20,22 @@ export class Part3Scene extends Phaser.Scene {
         right: false,
         up: false,
         down: false,
+        tick: undefined,
     };
 
+    elapsedTime = 0;
+    fixedTimeStep = 1000 / 60;
+
+    currentTick: number = 0;
+
     constructor() {
-        super({ key: "part3" });
+        super({ key: "main_scene" });
+    }
+    
+    preload() {
+        // preload demo assets
+        // this.load.image('ship_0001', 'assets/ship_0001.png');
+        this.load.image('ship_0001', 'https://cdn.glitch.global/3e033dcd-d5be-4db4-99e8-086ae90969ec/ship_0001.png?v=1649945243288');
     }
 
     async create() {
@@ -100,7 +102,7 @@ export class Part3Scene extends Phaser.Scene {
         const client = new Client(BACKEND_URL);
 
         try {
-            this.room = await client.joinOrCreate("part3_room", {});
+            this.room = await client.joinOrCreate("main_room", {});
 
             // connection successful!
             connectionStatusText.destroy();
@@ -116,13 +118,28 @@ export class Part3Scene extends Phaser.Scene {
         // skip loop if not connected yet.
         if (!this.currentPlayer) { return; }
 
+        this.elapsedTime += delta;
+        while (this.elapsedTime >= this.fixedTimeStep) {
+            this.elapsedTime -= this.fixedTimeStep;
+            this.fixedTick(time, this.fixedTimeStep);
+        }
+
         this.debugFPS.text = `Frame rate: ${this.game.loop.actualFps}`;
+    }
+
+    fixedTick(time, delta) {
+        this.currentTick++;
+
+        // const currentPlayerRemote = this.room.state.players.get(this.room.sessionId);
+        // const ticksBehind = this.currentTick - currentPlayerRemote.tick;
+        // console.log({ ticksBehind });
 
         const velocity = 2;
         this.inputPayload.left = this.cursorKeys.left.isDown;
         this.inputPayload.right = this.cursorKeys.right.isDown;
         this.inputPayload.up = this.cursorKeys.up.isDown;
         this.inputPayload.down = this.cursorKeys.down.isDown;
+        this.inputPayload.tick = this.currentTick;
         this.room.send(0, this.inputPayload);
 
         if (this.inputPayload.left) {
@@ -148,14 +165,14 @@ export class Part3Scene extends Phaser.Scene {
             if (sessionId === this.room.sessionId) {
                 continue;
             }
-
+            
             const entity = this.playerEntities[sessionId];
             const { serverX, serverY } = entity.data.values;
-
+            
             entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2);
             entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2);
         }
-        
+
     }
 
 }
